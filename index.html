@@ -1,0 +1,606 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>RootsShare Prototype — Class</title>
+<style>
+  :root{
+    --bg:#0b1220; --card:#0f1b26; --muted:#9fb0bb; --accent:#7ad7b0; --accent2:#6fb5ff;
+    --glass: rgba(255,255,255,0.03);
+    font-family: Inter, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
+    color-scheme: dark;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:linear-gradient(180deg,#06101a 0%, #081621 100%); color:#e6f7f6; min-height:100vh; -webkit-font-smoothing:antialiased;}
+  .wrap{max-width:1100px;margin:28px auto;padding:18px;}
+  header{display:flex;align-items:center;gap:14px;margin-bottom:18px}
+  .logo{width:56px;height:56px;border-radius:12px;background:linear-gradient(135deg,var(--accent),var(--accent2));display:flex;align-items:center;justify-content:center;color:#042;font-weight:800;font-size:18px}
+  h1{margin:0;font-size:20px}
+  .lead{margin:0;color:var(--muted);font-size:13px}
+  .layout{display:grid;grid-template-columns:260px 1fr 300px;gap:18px;margin-top:14px}
+  .card{background:var(--card);border-radius:12px;padding:14px;box-shadow:0 6px 30px rgba(0,0,0,0.6);}
+  .sidebar .section{margin-bottom:12px}
+  .btn{background:var(--accent);color:#032; padding:9px 12px;border-radius:10px;border:none;font-weight:700;cursor:pointer}
+  .btn.ghost{background:transparent;border:1px solid rgba(255,255,255,0.04);color:var(--muted)}
+  .input{width:100%;padding:10px;border-radius:8px;border:1px solid rgba(255,255,255,0.04);background:transparent;color:inherit}
+  .feed{display:grid;gap:12px}
+  .post{background:var(--glass);padding:12px;border-radius:10px;border:1px solid rgba(255,255,255,0.03)}
+  .post .meta{display:flex;gap:8px;align-items:center;margin-bottom:6px}
+  .post .title{font-weight:700}
+  .tag{background:rgba(255,255,255,0.03);padding:6px 8px;border-radius:999px;font-size:12px;color:var(--muted);margin-right:6px}
+  .right{display:flex;flex-direction:column;gap:12px}
+  .people-list{display:flex;flex-direction:column;gap:8px}
+  .person{display:flex;justify-content:space-between;align-items:center;padding:8px;background:rgba(255,255,255,0.01);border-radius:8px}
+  .small{font-size:13px;color:var(--muted)}
+  .modal-back{position:fixed;inset:0;background:rgba(0,0,0,0.6);display:none;align-items:center;justify-content:center;padding:20px;z-index:60}
+  .modal{width:100%;max-width:760px;background:linear-gradient(180deg,#07121a,#081522);border-radius:12px;padding:16px;border:1px solid rgba(255,255,255,0.03)}
+  form .row{display:flex;gap:8px;align-items:center;margin-bottom:10px}
+  textarea, input[type="text"], select{width:100%;padding:10px;border-radius:8px;border:1px solid rgba(255,255,255,0.04);background:transparent;color:inherit;font-size:14px}
+  textarea{min-height:100px;resize:vertical}
+  .grid-2{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+  .country-hub{display:grid;gap:8px}
+  .subtabs{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:8px}
+  .subtab{background:rgba(255,255,255,0.02);padding:6px 8px;border-radius:8px;color:var(--muted);cursor:pointer;font-size:13px}
+  .subtab.active{background:#e6f0f225;color:#052;font-weight:700}
+  .rating{display:inline-flex;gap:4px;align-items:center}
+  .star{cursor:pointer;font-size:18px;color:var(--muted)}
+  .star.on{color:#ffd66b}
+  nav.tabs{display:flex;gap:8px;margin-bottom:10px}
+  nav.tabs button{background:transparent;border:1px solid rgba(255,255,255,0.04);padding:8px 10px;border-radius:8px;color:var(--muted);cursor:pointer}
+  nav.tabs button.active{background:#e6f0f225;color:#052;font-weight:700}
+  .profile-blog .post-item{padding:10px;border-radius:8px;background:rgba(255,255,255,0.01);margin-bottom:8px}
+  .search-inline{display:flex;gap:8px}
+  @media (max-width:1000px){ .layout{grid-template-columns:1fr; } .right{order:2} .sidebar{order:3} }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div class="logo">RS</div>
+    <div>
+      <h1>RootsShare — Prototype</h1>
+      <p class="lead">Share cultural memories, rate helpful posts, explore country hubs, and find people by interests.</p>
+    </div>
+    <div style="margin-left:auto">
+      <button class="btn" id="newPostBtn">+ New Post</button>
+    </div>
+  </header>
+
+  <div class="layout">
+    <!-- LEFT: Sidebar (Country hub + discovery) -->
+    <aside class="sidebar card">
+      <div class="section">
+        <strong>Country Hub</strong>
+        <p class="small">Browse the cultural library by country</p>
+        <div style="margin-top:8px">
+          <input id="countrySearch" class="input" placeholder="Search country (e.g., China)" />
+        </div>
+        <div style="margin-top:8px;max-height:220px;overflow:auto" id="countryList"></div>
+      </div>
+
+      <hr style="border:none;height:12px">
+
+      <div class="section">
+        <strong>People discovery</strong>
+        <div style="margin-top:8px" class="search-inline">
+          <input id="personCountry" class="input" placeholder="Country"/>
+          <input id="personInterest" class="input" placeholder="Interest (e.g., recipes)"/>
+        </div>
+        <div style="margin-top:8px">
+          <button class="btn" id="findPeopleBtn">Find</button>
+          <button class="btn ghost" id="clearPeople">Clear</button>
+        </div>
+        <div style="margin-top:10px" id="peopleResults" class="people-list small"></div>
+      </div>
+
+      <hr style="border:none;height:12px">
+
+      <div>
+        <strong>Quick Actions</strong>
+        <div style="margin-top:8px;display:flex;gap:8px;flex-wrap:wrap">
+          <button class="btn ghost" id="gotoFeed">Feed</button>
+          <button class="btn ghost" id="gotoProfile">My Profile</button>
+          <button class="btn ghost" id="resetData">Reset</button>
+        </div>
+      </div>
+    </aside>
+
+    <!-- MIDDLE: Main feed / country / post detail area -->
+    <main>
+      <div class="card" id="mainCard">
+        <nav class="tabs" id="mainTabs">
+          <button class="active" data-view="feed">Public Feed</button>
+          <button data-view="countries">Countries</button>
+          <button data-view="explore">Explore (Find People)</button>
+        </nav>
+
+        <div id="viewArea">
+          <!-- Feed view -->
+          <div id="feedView">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
+              <div>
+                <input id="feedSearch" class="input" placeholder="Search posts, country, author..." style="width:420px"/>
+              </div>
+              <div class="small">Default ratings: 5-star & upvote answers</div>
+            </div>
+            <div id="feed" class="feed"></div>
+          </div>
+
+          <!-- Countries view -->
+          <div id="countriesView" style="display:none">
+            <div style="display:flex;justify-content:space-between;align-items:center">
+              <strong>Countries — browse cultural subsections</strong>
+              <div class="small muted">Choose a country to open its hub</div>
+            </div>
+            <div class="country-hub" id="countryHubArea" style="margin-top:12px"></div>
+          </div>
+
+          <!-- Explore view -->
+          <div id="exploreView" style="display:none">
+            <strong>Explore people</strong>
+            <div class="small" style="margin-bottom:8px">Use sidebar filters or search below</div>
+            <div style="margin-top:8px" id="exploreResults" class="people-list"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Post Detail / Country Detail modal will open above as modal -->
+    </main>
+
+    <!-- RIGHT: Profile (blog-style) & quick list -->
+    <aside class="right card">
+      <div class="profile card" style="padding:12px;background:transparent">
+        <div style="display:flex;gap:10px;align-items:center">
+          <div style="width:56px;height:56px;border-radius:10px;background:linear-gradient(135deg,var(--accent),var(--accent2));display:flex;align-items:center;justify-content:center;font-weight:800;color:#042" id="avatar">F</div>
+          <div>
+            <div id="profileName" style="font-weight:800">Freya Lindholm</div>
+            <div id="profileMeta" class="small">From Sweden · Swedish, English</div>
+          </div>
+        </div>
+        <div style="margin-top:10px;display:flex;gap:8px">
+          <button class="btn ghost" id="editProfile">Edit Profile</button>
+          <button class="btn" id="myNewPost">New Post</button>
+        </div>
+      </div>
+
+      <hr style="border:none;height:12px">
+
+      <div>
+        <strong>Your blog</strong>
+        <div id="profileBlog" class="profile-blog small" style="margin-top:8px"></div>
+      </div>
+
+      <hr style="border:none;height:12px">
+
+      <div>
+        <strong>Favorites</strong>
+        <div id="favoritesList" class="small" style="margin-top:8px">No favorites yet.</div>
+      </div>
+    </aside>
+  </div>
+
+  <footer style="text-align:center;color:var(--muted);margin-top:18px">Prototype for a design-thinking class — data stored locally in your browser.</footer>
+</div>
+
+<!-- Modal -->
+<div class="modal-back" id="modalBack"><div class="modal" id="modal"></div></div>
+
+<script>
+/*
+  RootsShare prototype JS (single-file)
+  - Uses localStorage key 'roots_v2'
+  - Entities:
+    - user: {name, country, languages, bio, interests}
+    - posts: {id, title, category, country, text, authorName, createdAt, visibility, ratingAvg, ratingCount, ratings:[], answers:[], favorites:[] }
+    - people discovered via user pool (derived from posts/authors)
+  Features implemented:
+    - Mandatory category on post creation
+    - 5-star rating per post (one rating per browser session per post)
+    - Upvote answers, comment/answer posts
+    - Country pages with subsections (Story/Recipe/etc) listing posts from that country/category
+    - Profile page acts as blog (lists user's posts & answers)
+    - Find people by country/interest/topic
+*/
+
+const LS_KEY = 'roots_v2';
+const DEFAULT_USER = { name:'Freya Lindholm', country:'Sweden', languages:'Swedish, English', bio:'Master’s student studying cultures', interests:'music,recipes' };
+const INITIAL = {
+  user: DEFAULT_USER,
+  posts: [
+    { id:'p1', title:"Grandma's Cinnamon Buns", category:"Recipe", country:"Sweden", text:"Kanelbullar — warm, yeasty, cinnamon buns that my grandma made. I miss the scent on Sunday mornings.", authorName:"Amina Rahman", createdAt:"2025-12-08", visibility:"public", ratings:[], ratingAvg:0, ratingCount:0, answers:[{id:'a1',author:'Miguel Torres',text:'Please share the recipe!',upvotes:2}] },
+    { id:'p2', title:"Midsummer memory", category:"Ritual", country:"Sweden", text:"Dancing, making flower crowns. How do we recreate this on campus?", authorName:"Freya Lindholm", createdAt:"2025-12-08", visibility:"public", ratings:[5,4], ratingAvg:4.5, ratingCount:2, answers:[] },
+    { id:'p3', title:"A gentle greeting word", category:"Word", country:"Sweden", text:"'Välkommen' carries warm hospitality. What greeting words do you have?", authorName:"Daniel Wong", createdAt:"2025-12-08", visibility:"public", ratings:[], ratingAvg:0, ratingCount:0, answers:[] },
+    { id:'p4', title:"Lullaby verse I forgot", category:"Song", country:"Sweden", text:"My mother sang a lullaby; I want to learn all the verses again.", authorName:"Priya Nair", createdAt:"2025-12-08", visibility:"public", ratings:[], ratingAvg:0, ratingCount:0, answers:[] }
+  ]
+};
+
+function load(){
+  const raw = localStorage.getItem(LS_KEY);
+  if(!raw){ localStorage.setItem(LS_KEY, JSON.stringify(INITIAL)); return JSON.parse(JSON.stringify(INITIAL)); }
+  try { return JSON.parse(raw); } catch(e){ localStorage.removeItem(LS_KEY); localStorage.setItem(LS_KEY, JSON.stringify(INITIAL)); return JSON.parse(JSON.stringify(INITIAL)); }
+}
+function save(data){ localStorage.setItem(LS_KEY, JSON.stringify(data)); }
+let state = load();
+
+// simple uid
+function uid(pref='id'){ return pref + Math.random().toString(36).slice(2,9); }
+
+// DOM refs
+const feedEl = document.getElementById('feed');
+const feedSearch = document.getElementById('feedSearch');
+const newPostBtn = document.getElementById('newPostBtn');
+const modalBack = document.getElementById('modalBack');
+const modal = document.getElementById('modal');
+const countryList = document.getElementById('countryList');
+const countryHubArea = document.getElementById('countryHubArea');
+const peopleResults = document.getElementById('peopleResults');
+const findPeopleBtn = document.getElementById('findPeopleBtn');
+const personCountry = document.getElementById('personCountry');
+const personInterest = document.getElementById('personInterest');
+const profileName = document.getElementById('profileName');
+const profileMeta = document.getElementById('profileMeta');
+const avatar = document.getElementById('avatar');
+const profileBlog = document.getElementById('profileBlog');
+const favoritesList = document.getElementById('favoritesList');
+const newPostFromProfile = document.getElementById('myNewPost');
+const editProfileBtn = document.getElementById('editProfile');
+const countrySearch = document.getElementById('countrySearch');
+const mainTabs = document.getElementById('mainTabs');
+const viewArea = document.getElementById('viewArea');
+const feedView = document.getElementById('feedView');
+const countriesView = document.getElementById('countriesView');
+const exploreView = document.getElementById('exploreView');
+const exploreResults = document.getElementById('exploreResults');
+
+function renderProfile(){
+  const u = state.user;
+  profileName.textContent = u.name;
+  profileMeta.textContent = `From ${u.country} · ${u.languages}`;
+  avatar.textContent = (u.name.split(' ').map(s=>s[0]).slice(0,2).join('')).toUpperCase();
+  // blog entries
+  const myPosts = state.posts.filter(p=>p.authorName===u.name).sort((a,b)=>b.createdAt.localeCompare(a.createdAt));
+  profileBlog.innerHTML = myPosts.length? myPosts.map(p=>`<div class="post-item"><strong>${escape(p.title)}</strong><div class="small muted">${p.category} · ${p.country} · ${p.createdAt}</div><div style="margin-top:6px">${escape(shorten(p.text,180))}</div>
+    <div style="margin-top:6px"><button class="btn ghost view-post" data-id="${p.id}">Open</button></div></div>`).join(''): '<div class="small muted">No posts yet — create one!</div>';
+  profileBlog.querySelectorAll('.view-post').forEach(b=>b.addEventListener('click',e=>openPost(e.currentTarget.dataset.id)));
+  // favorites (posts with favorites array containing user name)
+  const favs = state.posts.filter(p=> (p.favorites || []).includes(u.name) );
+  favoritesList.innerHTML = favs.length? favs.map(f=>`<div style="margin-bottom:8px"><strong>${escape(f.title)}</strong><div class="small muted">${f.country} · ${f.category}</div></div>`).join('') : '<div class="small muted">No favorites yet.</div>';
+}
+
+function escape(s){ return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;'); }
+function shorten(s,n){ return s.length>n? s.slice(0,n-1)+'…': s; }
+
+function renderFeed(){
+  feedEl.innerHTML = '';
+  const q = (feedSearch.value || '').toLowerCase();
+  const posts = state.posts.slice().reverse().filter(p=>{
+    if(p.visibility !== 'public') return false;
+    if(!q) return true;
+    return (p.title + p.text + p.country + p.authorName + p.category).toLowerCase().includes(q);
+  });
+  if(posts.length===0){ feedEl.innerHTML = '<div class="small muted">No posts found. Create a new post to get started.</div>'; return; }
+  posts.forEach(p=>{
+    const div = document.createElement('div'); div.className='post';
+    div.innerHTML = `
+      <div class="meta"><div style="font-weight:700">${escape(p.authorName)}</div><div class="small muted" style="margin-left:8px">${escape(p.country)} · ${escape(p.createdAt)}</div></div>
+      <div class="title">${escape(p.title)}</div>
+      <div style="margin-top:6px" class="small muted">${escape(shorten(p.text,240))}</div>
+      <div style="margin-top:8px">
+        <span class="tag">${escape(p.category)}</span>
+        <span class="tag">${escape(p.visibility)}</span>
+      </div>
+      <div style="margin-top:10px;display:flex;justify-content:space-between;align-items:center">
+        <div><button class="btn ghost view-post" data-id="${p.id}">Open</button> <button class="btn ghost fav-btn" data-id="${p.id}">★ Favorite</button></div>
+        <div style="display:flex;align-items:center;gap:8px">
+          <div class="small muted">Rating:</div>
+          <div class="rating" data-id="${p.id}">${renderStars(p.ratingAvg)}</div>
+          <div class="small muted" style="margin-left:10px">${p.ratingCount||0} ratings</div>
+        </div>
+      </div>
+    `;
+    feedEl.appendChild(div);
+  });
+  // attach events
+  feedEl.querySelectorAll('.view-post').forEach(b=>b.addEventListener('click',e=>openPost(e.currentTarget.dataset.id)));
+  feedEl.querySelectorAll('.fav-btn').forEach(b=>b.addEventListener('click',handleFavorite));
+  feedEl.querySelectorAll('.rating .star').forEach(s=>s.addEventListener('click',handleRating));
+}
+
+function renderStars(avg){
+  avg = avg || 0;
+  let html = '';
+  for(let i=1;i<=5;i++){
+    html += `<span class="star ${i<=Math.round(avg)?'on':''}" data-star="${i}">★</span>`;
+  }
+  return html;
+}
+
+function handleFavorite(e){
+  const id = e.currentTarget.dataset.id;
+  const p = state.posts.find(x=>x.id===id);
+  if(!p.favorites) p.favorites = [];
+  const name = state.user.name;
+  if(p.favorites.includes(name)){ // remove
+    p.favorites = p.favorites.filter(n=>n!==name);
+  } else { p.favorites.push(name); }
+  save(state); renderProfile(); renderFeed();
+}
+
+function handleRating(e){
+  const postId = e.currentTarget.parentElement.dataset.id;
+  const star = Number(e.currentTarget.dataset.star);
+  // to keep simple: allow rating multiple times; store in p.ratings array
+  const p = state.posts.find(x=>x.id===postId);
+  if(!p.ratings) p.ratings = [];
+  p.ratings.push(star);
+  p.ratingCount = p.ratings.length;
+  p.ratingAvg = Math.round((p.ratings.reduce((a,b)=>a+b,0)/p.ratingCount)*10)/10;
+  save(state); renderFeed(); // re-render to show updated stars
+}
+
+// New post modal
+function openNewPost(prefillCountry=''){
+  showModal(`
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px"><strong>New Post</strong><button class="close btn ghost">Close</button></div>
+    <form id="newPostForm">
+      <div class="row"><input id="postTitle" placeholder="Title (required)" required></div>
+      <div class="grid-2">
+        <select id="postCategory" required>
+          <option value="">-- Select category (mandatory) --</option>
+          <option>Story</option><option>Recipe</option><option>Ritual</option><option>Word</option><option>Song</option><option>Question</option><option>Other</option>
+        </select>
+        <input id="postCountry" placeholder="Country (e.g., Sweden)" value="${escape(prefillCountry || state.user.country || '')}">
+      </div>
+      <div class="row"><textarea id="postText" placeholder="Write a short memory, recipe, or question (max 450 chars)"></textarea></div>
+      <div class="row"><label><input id="postPublic" type="checkbox" checked> Make public (checked)</label></div>
+      <div style="display:flex;gap:8px;justify-content:flex-end"><button type="button" class="btn ghost close">Cancel</button><button type="submit" class="btn">Save Post</button></div>
+    </form>
+  `);
+  document.getElementById('newPostForm').addEventListener('submit',function(e){
+    e.preventDefault();
+    const title = document.getElementById('postTitle').value.trim();
+    const category = document.getElementById('postCategory').value;
+    const country = document.getElementById('postCountry').value.trim() || state.user.country;
+    const text = document.getElementById('postText').value.trim();
+    const vis = document.getElementById('postPublic').checked ? 'public' : 'private';
+    if(!title || !category){ alert('Please fill title and category (category is mandatory).'); return; }
+    const p = { id: uid('p'), title, category, country, text, authorName: state.user.name, createdAt: new Date().toISOString().slice(0,10), visibility:vis, ratings:[], ratingAvg:0, ratingCount:0, answers:[] };
+    state.posts.push(p); save(state); closeModal(); renderFeed(); renderCountries(); renderProfile();
+  });
+}
+
+// Post detail modal
+function openPost(id){
+  const p = state.posts.find(x=>x.id===id);
+  if(!p) return alert('Post not found');
+  showModal(`
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+      <div><strong>${escape(p.title)}</strong><div class="small muted">${escape(p.authorName)} · ${escape(p.country)} · ${escape(p.createdAt)}</div></div>
+      <div><button class="close btn ghost">Close</button></div>
+    </div>
+    <div class="small muted">Category: ${escape(p.category)}</div>
+    <div style="margin-top:10px">${escape(p.text)}</div>
+    <div style="margin-top:12px"><strong>Rating</strong><div style="margin-top:6px" class="rating" data-id="${p.id}">${renderStars(p.ratingAvg)} <span class="small muted" style="margin-left:8px">${p.ratingCount||0} ratings</span></div></div>
+    <div style="margin-top:12px"><strong>Answers</strong>
+      <div id="answersList" style="margin-top:8px">${p.answers.map(a=>`<div style="padding:8px;border-radius:8px;background:rgba(255,255,255,0.02);margin-bottom:8px"><div style="display:flex;justify-content:space-between"><strong>${escape(a.author)}</strong><div class="small muted">Upvotes: ${a.upvotes||0}</div></div><div style="margin-top:6px">${escape(a.text)}</div><div style="margin-top:8px"><button class="btn ghost upvote" data-id="${a.id}" data-post="${p.id}">▲ Upvote</button></div></div>`).join('')}</div>
+    </div>
+    <form id="answerForm" style="margin-top:12px">
+      <div class="row"><input id="answerAuthor" placeholder="Your name" value="${escape(state.user.name)}" required></div>
+      <div class="row"><textarea id="answerText" placeholder="Write an answer, resource, or suggestion (max 300 chars)"></textarea></div>
+      <div style="display:flex;gap:8px;justify-content:flex-end"><button type="submit" class="btn">Add Answer</button></div>
+    </form>
+  `);
+  // attach upvote handlers
+  modal.querySelectorAll('.upvote').forEach(b=>b.addEventListener('click',e=>{
+    const aid = e.currentTarget.dataset.id; const pid = e.currentTarget.dataset.post;
+    const post = state.posts.find(x=>x.id===pid); const ans = post.answers.find(x=>x.id===aid); ans.upvotes = (ans.upvotes||0)+1;
+    save(state); openPost(pid);
+  }));
+  // rating stars in modal
+  modal.querySelectorAll('.rating .star').forEach(s=>s.addEventListener('click',e=>{
+    const star = Number(e.currentTarget.dataset.star);
+    const pid = e.currentTarget.parentElement.dataset.id;
+    const post = state.posts.find(x=>x.id===pid);
+    post.ratings.push(star);
+    post.ratingCount = post.ratings.length;
+    post.ratingAvg = Math.round((post.ratings.reduce((a,b)=>a+b,0)/post.ratingCount)*10)/10;
+    save(state); openPost(pid);
+  }));
+  // answer form
+  document.getElementById('answerForm').addEventListener('submit',function(ev){
+    ev.preventDefault();
+    const author = document.getElementById('answerAuthor').value.trim() || 'Anonymous';
+    const text = document.getElementById('answerText').value.trim();
+    if(!text) return alert('Please write an answer');
+    const post = state.posts.find(x=>x.id===id);
+    post.answers.push({ id: uid('a'), author, text, upvotes:0 });
+    save(state); openPost(id);
+  });
+}
+
+// Country hub and subsections
+function uniqueCountries(){ return Array.from(new Set(state.posts.map(p=>p.country))).sort(); }
+function renderCountries(){
+  // left list
+  const countries = uniqueCountries();
+  countryList.innerHTML = countries.map(c=>`<div style="padding:8px;border-radius:8px;background:rgba(255,255,255,0.01);margin-bottom:6px;display:flex;justify-content:space-between;align-items:center"><div>${escape(c)}</div><div><button class="btn ghost open-country" data-country="${escape(c)}">Open</button></div></div>`).join('');
+  countryList.querySelectorAll('.open-country').forEach(b=>b.addEventListener('click',e=>openCountry(e.currentTarget.dataset.country)));
+  // hub area: show top countries with small preview
+  countryHubArea.innerHTML = countries.map(c=>{
+    const byC = state.posts.filter(p=>p.country===c);
+    return `<div style="padding:10px;border-radius:8px;background:rgba(255,255,255,0.01)"><div style="display:flex;justify-content:space-between;align-items:center"><strong>${escape(c)}</strong><div><button class="btn ghost open-country" data-country="${escape(c)}">Open hub</button></div></div><div class="small muted" style="margin-top:8px">${byC.length} posts · top: ${byC.slice(0,3).map(p=>escape(p.title)).join(' · ')}</div></div>`;
+  }).join('');
+  countryHubArea.querySelectorAll('.open-country').forEach(b=>b.addEventListener('click',e=>openCountry(e.currentTarget.dataset.country)));
+}
+
+// Open a country hub modal with subsections
+function openCountry(country){
+  const subs = ['Story','Recipe','Ritual','Word','Song','Question','Other'];
+  const postsBy = state.posts.filter(p=>p.country===country && p.visibility==='public');
+  let active = 'Story';
+  showModal(renderCountryHtml(country, postsBy, active));
+  function bindSubs(){
+    modal.querySelectorAll('.subtab').forEach(st=>st.addEventListener('click',e=>{
+      active = e.currentTarget.dataset.sub;
+      modal.querySelectorAll('.subtab').forEach(x=>x.classList.remove('active'));
+      e.currentTarget.classList.add('active');
+      const list = postsBy.filter(p=>p.category===active);
+      modal.querySelector('#countryListArea').innerHTML = list.length? list.map(p=>`<div style="padding:8px;border-radius:8px;background:rgba(255,255,255,0.01);margin-bottom:6px"><strong>${escape(p.title)}</strong><div class="small muted">${escape(p.authorName)} · ${escape(p.createdAt)}</div><div style="margin-top:6px">${escape(shorten(p.text,160))}</div><div style="margin-top:6px"><button class="btn ghost view-post" data-id="${p.id}">Open</button></div></div>`).join('') : '<div class="small muted">No posts in this section yet.</div>';
+      modal.querySelectorAll('.view-post').forEach(b=>b.addEventListener('click',ev=>openPost(ev.currentTarget.dataset.id)));
+    }));
+  }
+  bindSubs();
+}
+
+// returns HTML for initial country modal
+function renderCountryHtml(country, postsBy, active){
+  const subs = ['Story','Recipe','Ritual','Word','Song','Question','Other'];
+  const tabs = subs.map(s=>`<div class="subtab ${s===active?'active':''}" data-sub="${s}">${s}</div>`).join('');
+  const list = postsBy.filter(p=>p.category===active).map(p=>`<div style="padding:8px;border-radius:8px;background:rgba(255,255,255,0.01);margin-bottom:6px"><strong>${escape(p.title)}</strong><div class="small muted">${escape(p.authorName)} · ${escape(p.createdAt)}</div><div style="margin-top:6px">${escape(shorten(p.text,160))}</div><div style="margin-top:6px"><button class="btn ghost view-post" data-id="${p.id}">Open</button></div></div>`).join('') || '<div class="small muted">No posts in this section yet.</div>';
+  return `
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+      <div><strong>${escape(country)}</strong><div class="small muted">Country hub — browse subsections below</div></div>
+      <div><button class="close btn ghost">Close</button></div>
+    </div>
+    <div class="subtabs">${tabs}</div>
+    <div id="countryListArea" style="margin-top:8px">${list}</div>
+    <div style="margin-top:10px;display:flex;justify-content:flex-end"><button class="btn ghost" id="newPostInCountry">+ New post in ${escape(country)}</button></div>
+  `;
+}
+
+// People discovery
+function findPeople(countryFilter, interestFilter){
+  // derive people from posts (authors) and include profile user
+  const authors = Array.from(new Set(state.posts.map(p=>p.authorName)));
+  const people = authors.map(name=>{
+    const posts = state.posts.filter(p=>p.authorName===name);
+    const countries = Array.from(new Set(posts.map(p=>p.country))).join(', ');
+    const interests = Array.from(new Set(posts.map(p=>p.category.toLowerCase()))).join(', ');
+    return { name, countries, interests, sample: posts[0] ? posts[0].title : '' };
+  });
+  let filtered = people;
+  if(countryFilter) filtered = filtered.filter(p=>p.countries.toLowerCase().includes(countryFilter.toLowerCase()));
+  if(interestFilter) filtered = filtered.filter(p=>p.interests.toLowerCase().includes(interestFilter.toLowerCase()) || p.name.toLowerCase().includes(interestFilter.toLowerCase()));
+  return filtered;
+}
+
+function renderPeopleResults(list, container){
+  container.innerHTML = list.length? list.map(p=>`<div class="person"><div><strong>${escape(p.name)}</strong><div class="small muted">${escape(p.countries)} · ${escape(p.interests)}</div></div><div><button class="btn ghost view-person" data-name="${escape(p.name)}">Open</button></div></div>`).join('') : '<div class="small muted">No people found.</div>';
+  container.querySelectorAll('.view-person').forEach(b=>b.addEventListener('click',e=>openPerson(e.currentTarget.dataset.name)));
+}
+
+function openPerson(name){
+  // open modal showing person's mini-profile (posts & contact)
+  const posts = state.posts.filter(p=>p.authorName===name);
+  const countries = Array.from(new Set(posts.map(p=>p.country))).join(', ');
+  const interests = Array.from(new Set(posts.map(p=>p.category))).join(', ');
+  showModal(`
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px"><div><strong>${escape(name)}</strong><div class="small muted">${escape(countries)} · ${escape(interests)}</div></div><div><button class="close btn ghost">Close</button></div></div>
+    <div><strong>Posts</strong><div style="margin-top:8px">${posts.length? posts.map(p=>`<div style="padding:8px;border-radius:8px;background:rgba(255,255,255,0.01);margin-bottom:8px"><strong>${escape(p.title)}</strong><div class="small muted">${escape(p.country)} · ${escape(p.category)}</div><div style="margin-top:6px">${escape(shorten(p.text,160))}</div><div style="margin-top:6px"><button class="btn ghost view-post" data-id="${p.id}">Open</button></div></div>`).join('') : '<div class="small muted">No posts</div>'}</div>
+  `);
+  modal.querySelectorAll('.view-post').forEach(b=>b.addEventListener('click',e=>openPost(e.currentTarget.dataset.id)));
+}
+
+// Modal helpers
+function showModal(html){
+  modal.innerHTML = html;
+  modalBack.style.display='flex';
+  modalBack.addEventListener('click',onBack);
+  modal.querySelectorAll('.close').forEach(b=>b.addEventListener('click',closeModal));
+  // special new post in country
+  const newInCountry = modal.querySelector('#newPostInCountry');
+  if(newInCountry) newInCountry.addEventListener('click', ()=>{ const country = newInCountry.textContent.split(' in ')[1]; openNewPost(country); });
+}
+function onBack(e){ if(e.target===modalBack) closeModal(); }
+function closeModal(){ modalBack.style.display='none'; modal.innerHTML=''; modalBack.removeEventListener('click',onBack); }
+
+// Bind UI
+function bind(){
+  newPostBtn.addEventListener('click',()=>openNewPost());
+  document.addEventListener('click', function(e){
+    if(e.target && e.target.classList.contains('view-post')) openPost(e.target.dataset.id);
+    if(e.target && e.target.classList.contains('close')) closeModal();
+  });
+  document.getElementById('resetData').addEventListener('click',()=>{ if(confirm('Reset prototype data?')){ localStorage.removeItem(LS_KEY); state = load(); renderAll(); }});
+  document.getElementById('myNewPost').addEventListener('click',()=>openNewPost());
+  editProfileBtn.addEventListener('click', openProfileModal);
+  findPeopleBtn.addEventListener('click', ()=>{ const list = findPeople(personCountry.value, personInterest.value); renderPeopleResults(list, peopleResults); renderPeopleResults(list, exploreResults); });
+  document.getElementById('clearPeople').addEventListener('click', ()=>{ personCountry.value=''; personInterest.value=''; peopleResults.innerHTML=''; });
+  feedSearch.addEventListener('input', renderFeed);
+  countrySearch.addEventListener('input', ()=>{ const q = countrySearch.value.toLowerCase(); countryList.querySelectorAll('div').forEach(d=>{ d.style.display = q? (d.textContent.toLowerCase().includes(q)?'flex':'none') : 'flex'; }); });
+  // main tabs
+  mainTabs.querySelectorAll('button').forEach(b=>b.addEventListener('click', e=>{
+    mainTabs.querySelectorAll('button').forEach(x=>x.classList.remove('active'));
+    e.currentTarget.classList.add('active');
+    const view = e.currentTarget.dataset.view;
+    feedView.style.display = view==='feed' ? '' : 'none';
+    countriesView.style.display = view==='countries' ? '' : 'none';
+    exploreView.style.display = view==='explore' ? '' : 'none';
+  }));
+  // delegate star click for feed (since stars are rendered dynamically)
+  document.addEventListener('click', function(e){
+    if(e.target && e.target.classList.contains('star') && e.target.parentElement.classList.contains('rating')){
+      handleRating({ currentTarget: e.target });
+    }
+    if(e.target && e.target.classList.contains('view-post')){
+      openPost(e.target.dataset.id);
+    }
+  });
+}
+
+// simple profile editor
+function openProfileModal(){
+  showModal(`
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px"><strong>Edit Profile</strong><button class="close btn ghost">Close</button></div>
+    <form id="profileForm"><div class="row"><input id="pfName" value="${escape(state.user.name)}" required></div>
+    <div class="row"><input id="pfCountry" value="${escape(state.user.country)}"></div>
+    <div class="row"><input id="pfLanguages" value="${escape(state.user.languages)}"></div>
+    <div class="row"><input id="pfInterests" value="${escape(state.user.interests||'')}" placeholder="comma separated interests"></div>
+    <div style="display:flex;justify-content:flex-end;gap:8px"><button type="button" class="btn ghost close">Cancel</button><button type="submit" class="btn">Save</button></div></form>
+  `);
+  document.getElementById('profileForm').addEventListener('submit',function(e){
+    e.preventDefault();
+    state.user.name = document.getElementById('pfName').value.trim() || state.user.name;
+    state.user.country = document.getElementById('pfCountry').value.trim() || state.user.country;
+    state.user.languages = document.getElementById('pfLanguages').value.trim() || state.user.languages;
+    state.user.interests = document.getElementById('pfInterests').value.trim();
+    save(state); renderAll(); closeModal();
+  });
+}
+
+// initial render functions
+function renderAll(){
+  renderProfile(); renderFeed(); renderCountries(); renderPeopleResults(findPeople('', ''), peopleResults); renderPeopleResults(findPeople('', ''), exploreResults);
+}
+bind(); renderAll(); // initial
+
+// expose some functions to modal delegated handlers
+function handleRating(e){
+  // e.currentTarget is star element
+  const star = Number(e.currentTarget.dataset.star);
+  const postId = e.currentTarget.parentElement.dataset.id;
+  // find post & push rating
+  const p = state.posts.find(x=>x.id===postId);
+  if(!p.ratings) p.ratings = [];
+  p.ratings.push(star);
+  p.ratingCount = p.ratings.length; p.ratingAvg = Math.round((p.ratings.reduce((a,b)=>a+b,0)/p.ratingCount)*10)/10;
+  save(state); renderFeed();
+}
+
+function onModalClickSelectors(){
+  // when modal opens, attach star click handlers and view-posts
+  modal.querySelectorAll('.rating .star').forEach(s=>s.addEventListener('click', (ev)=>{ handleRating({ currentTarget: s }); }));
+  modal.querySelectorAll('.view-post').forEach(b=>b.addEventListener('click', e=>openPost(e.currentTarget.dataset.id)));
+}
+modalBack.addEventListener('DOMNodeInserted', onModalClickSelectors);
+
+// small helper: open country via left list click
+document.addEventListener('click', function(e){
+  if(e.target && e.target.classList.contains('open-country')) openCountry(e.target.dataset.country);
+});
+
+// end of script
+</script>
+</body>
+</html>
