@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>RootsShare Prototype — Sidebar Nav</title>
+<title>RootsShare Prototype — Sidebar Nav (Fixed)</title>
 <style>
   :root{
     --bg:#07101a; --card:#0f1b26; --muted:#9fb0bb; --accent:#7ad7b0; --accent2:#6fb5ff;
@@ -33,8 +33,8 @@
   .people-list{display:flex;flex-direction:column;gap:8px}
   .person{display:flex;justify-content:space-between;align-items:center;padding:8px;background:rgba(255,255,255,0.01);border-radius:8px}
   .small{font-size:13px;color:var(--muted)}
-  .modal-back{position:fixed;inset:0;background:rgba(0,0,0,0.6);display:none;align-items:center;justify-content:center;padding:20px;z-index:60}
-  .modal{width:100%;max-width:760px;background:linear-gradient(180deg,#07121a,#081522);border-radius:12px;padding:16px;border:1px solid rgba(255,255,255,0.03)}
+  .modal-back{position:fixed;inset:0;background:rgba(0,0,0,0.6);display:none;align-items:center;justify-content:center;padding:20px;z-index:1000}
+  .modal{width:100%;max-width:760px;background:linear-gradient(180deg,#07121a,#081522);border-radius:12px;padding:16px;border:1px solid rgba(255,255,255,0.03);z-index:1001;position:relative}
   form .row{display:flex;gap:8px;align-items:center;margin-bottom:10px}
   textarea, input[type="text"], select{width:100%;padding:10px;border-radius:8px;border:1px solid rgba(255,255,255,0.04);background:transparent;color:inherit;font-size:14px}
   textarea{min-height:100px;resize:vertical}
@@ -51,6 +51,10 @@
   nav.side-menu button.active{background:rgba(255,255,255,0.03);color:#e6f0f6;font-weight:800}
   .profile-blog .post-item{padding:10px;border-radius:8px;background:rgba(255,255,255,0.01);margin-bottom:8px}
   .search-inline{display:flex;gap:8px}
+  /* Fix for select in modal */
+  .modal select{background:#f7f9fa;color:#042;border:1px solid rgba(2,6,9,0.06);appearance:auto; -webkit-appearance:auto; z-index:1200; position:relative}
+  .modal option{background:#fff;color:#042}
+  /* on small screens */
   @media (max-width:1000px){ .layout{grid-template-columns:1fr; } .right{order:2} .sidebar{order:3} }
 </style>
 </head>
@@ -68,7 +72,7 @@
   </header>
 
   <div class="layout">
-    <!-- LEFT: Sidebar (Navigation + Country list + discovery filters) -->
+    <!-- LEFT: Sidebar (Navigation + Country list + quick actions) -->
     <aside class="sidebar card">
       <nav class="side-menu" id="sideMenu">
         <button class="active" data-view="feed">• Public Feed</button>
@@ -83,20 +87,6 @@
           <input id="countrySearch" class="input" placeholder="Filter countries (e.g., China)" />
         </div>
         <div style="margin-top:8px;max-height:280px;overflow:auto" id="countryList"></div>
-      </div>
-
-      <hr style="border:none;height:12px">
-
-      <div class="section">
-        <strong>Quick People Filters</strong>
-        <div style="margin-top:8px" class="search-inline">
-          <input id="personCountry" class="input" placeholder="Country"/>
-          <input id="personInterest" class="input" placeholder="Interest (e.g., recipes)"/>
-        </div>
-        <div style="margin-top:8px">
-          <button class="btn" id="findPeopleBtn">Find</button>
-          <button class="btn ghost" id="clearPeople">Clear</button>
-        </div>
       </div>
 
       <hr style="border:none;height:12px">
@@ -138,7 +128,16 @@
           <!-- People view -->
           <div id="peopleView" style="display:none">
             <strong>Find People</strong>
-            <div class="small" style="margin-bottom:8px">Use the filters on the left or search below</div>
+            <div class="small" style="margin-bottom:8px">Use the filters below to find people by country or interest</div>
+
+            <!-- MOVED filters into People tab -->
+            <div style="display:flex;gap:8px;margin-bottom:8px">
+              <input id="personCountryTab" class="input" placeholder="Country (e.g., India)"/>
+              <input id="personInterestTab" class="input" placeholder="Interest / topic (e.g., recipes)"/>
+              <button class="btn" id="findPeopleBtnTab">Find</button>
+              <button class="btn ghost" id="clearPeopleTab">Clear</button>
+            </div>
+
             <div style="margin-top:8px" id="exploreResults" class="people-list"></div>
           </div>
         </div>
@@ -184,10 +183,8 @@
 <div class="modal-back" id="modalBack"><div class="modal" id="modal"></div></div>
 
 <script>
-/* Modified RootsShare prototype: left sidebar navigation controls which main view is visible.
-   Full features: mandatory category, 5-star rating, country hubs, profile blog, people discovery.
-*/
-const LS_KEY = 'roots_v3';
+/* roots_v4: sidebar nav shows only selected view; people filters moved to people tab; modal select styling fixed */
+const LS_KEY = 'roots_v4';
 const DEFAULT_USER = { name:'Freya Lindholm', country:'Sweden', languages:'Swedish, English', bio:'Master’s student studying cultures', interests:'music,recipes' };
 const INITIAL = {
   user: DEFAULT_USER,
@@ -216,10 +213,6 @@ const modalBack = document.getElementById('modalBack');
 const modal = document.getElementById('modal');
 const countryList = document.getElementById('countryList');
 const countryHubArea = document.getElementById('countryHubArea');
-const peopleResults = document.getElementById('peopleResults');
-const findPeopleBtn = document.getElementById('findPeopleBtn');
-const personCountry = document.getElementById('personCountry');
-const personInterest = document.getElementById('personInterest');
 const profileName = document.getElementById('profileName');
 const profileMeta = document.getElementById('profileMeta');
 const avatar = document.getElementById('avatar');
@@ -234,10 +227,11 @@ const countriesView = document.getElementById('countriesView');
 const peopleView = document.getElementById('peopleView');
 const exploreResults = document.getElementById('exploreResults');
 
-// render helpers
+// helpers
 function escape(s){ return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;'); }
 function shorten(s,n){ return s.length>n? s.slice(0,n-1)+'…': s; }
 
+// render profile
 function renderProfile(){
   const u = state.user;
   profileName.textContent = u.name;
@@ -250,6 +244,7 @@ function renderProfile(){
   favoritesList.innerHTML = favs.length? favs.map(f=>`<div style="margin-bottom:8px"><strong>${escape(f.title)}</strong><div class="small muted">${f.country} · ${f.category}</div></div>`).join('') : '<div class="small muted">No favorites yet.</div>';
 }
 
+// feed render
 function renderFeed(){
   feedEl.innerHTML = '';
   const q = (feedSearch.value || '').toLowerCase();
@@ -332,6 +327,12 @@ function openNewPost(prefillCountry=''){
       <div style="display:flex;gap:8px;justify-content:flex-end"><button type="button" class="btn ghost close">Cancel</button><button type="submit" class="btn">Save Post</button></div>
     </form>
   `);
+  // ensure the select and options are visible and styled as expected
+  const sel = document.getElementById('postCategory');
+  sel.style.background = '#fff';
+  sel.style.color = '#042';
+  sel.style.zIndex = 1200;
+  sel.style.position = 'relative';
   document.getElementById('newPostForm').addEventListener('submit',function(e){
     e.preventDefault();
     const title = document.getElementById('postTitle').value.trim();
@@ -436,7 +437,7 @@ function renderCountryHtml(country, postsBy, active){
   `;
 }
 
-// People discovery
+// People discovery (filters now in People tab)
 function findPeople(countryFilter, interestFilter){
   const authors = Array.from(new Set(state.posts.map(p=>p.authorName)));
   const people = authors.map(name=>{
@@ -509,10 +510,17 @@ function bind(){
   document.getElementById('resetData').addEventListener('click',()=>{ if(confirm('Reset prototype data?')){ localStorage.removeItem(LS_KEY); state = load(); renderAll(); }});
   document.getElementById('myNewPost').addEventListener('click',()=>openNewPost());
   editProfileBtn.addEventListener('click', openProfileModal);
-  findPeopleBtn.addEventListener('click', ()=>{ const list = findPeople(personCountry.value, personInterest.value); renderPeopleResults(list, peopleResults); renderPeopleResults(list, exploreResults); });
-  document.getElementById('clearPeople').addEventListener('click', ()=>{ personCountry.value=''; personInterest.value=''; peopleResults.innerHTML=''; exploreResults.innerHTML=''; });
 
-  // sidebar nav clicks: show only selected view
+  // People tab filters (moved)
+  document.getElementById('findPeopleBtnTab').addEventListener('click', ()=>{
+    const list = findPeople(document.getElementById('personCountryTab').value, document.getElementById('personInterestTab').value);
+    renderPeopleResults(list, exploreResults);
+  });
+  document.getElementById('clearPeopleTab').addEventListener('click', ()=>{
+    document.getElementById('personCountryTab').value=''; document.getElementById('personInterestTab').value=''; exploreResults.innerHTML='';
+  });
+
+  // sidebar nav: show only selected view
   sideMenu.querySelectorAll('button').forEach(b=>b.addEventListener('click', e=>{
     sideMenu.querySelectorAll('button').forEach(x=>x.classList.remove('active'));
     e.currentTarget.classList.add('active');
@@ -528,11 +536,25 @@ function bind(){
 
 // initial renders
 function renderAll(){
-  renderProfile(); renderFeed(); renderCountries(); renderPeopleResults(findPeople('', ''), peopleResults); renderPeopleResults(findPeople('', ''), exploreResults);
+  renderProfile(); renderFeed(); renderCountries(); renderPeopleResults(findPeople('', ''), exploreResults);
 }
 bind(); renderAll();
 
-// expose functions used by dynamic handlers
+// convenience: open feed or countries programmatically
+document.getElementById('gotoFeed').addEventListener('click', ()=>{ sideMenu.querySelector('button[data-view="feed"]').click(); });
+document.getElementById('gotoProfile').addEventListener('click', ()=>{ sideMenu.querySelector('button[data-view="people"]').click(); });
+
+// delegate star clicks inside feed (since stars are dynamic)
+document.addEventListener('click', function(e){
+  if(e.target && e.target.classList.contains('star') && e.target.parentElement.classList.contains('rating')){
+    handleRating({ currentTarget: e.target });
+  }
+  if(e.target && e.target.classList.contains('view-post')){
+    openPost(e.target.dataset.id);
+  }
+});
+
+// helper functions used by delegated handlers
 function handleRating(e){
   const star = Number(e.currentTarget.dataset.star);
   const postId = e.currentTarget.parentElement.dataset.id;
@@ -551,23 +573,9 @@ function handleFavorite(e){
   save(state); renderProfile(); renderFeed();
 }
 
-// convenience: open feed or countries programmatically (used by quick buttons)
-document.getElementById('gotoFeed').addEventListener('click', ()=>{ sideMenu.querySelector('button[data-view="feed"]').click(); });
-document.getElementById('gotoProfile').addEventListener('click', ()=>{ sideMenu.querySelector('button[data-view="people"]').click(); });
-
-// helper: delegate star clicks inside feed (since stars are dynamic)
-document.addEventListener('click', function(e){
-  if(e.target && e.target.classList.contains('star') && e.target.parentElement.classList.contains('rating')){
-    handleRating({ currentTarget: e.target });
-  }
-  if(e.target && e.target.classList.contains('view-post')){
-    openPost(e.target.dataset.id);
-  }
-});
-
-// save helper
-function save(stateObj){ localStorage.setItem(LS_KEY, JSON.stringify(stateObj)); }
-function load(){ const raw = localStorage.getItem(LS_KEY); if(!raw){ localStorage.setItem(LS_KEY, JSON.stringify(INITIAL)); return JSON.parse(JSON.stringify(INITIAL)); } try { return JSON.parse(raw); } catch(e){ localStorage.removeItem(LS_KEY); localStorage.setItem(LS_KEY, JSON.stringify(INITIAL)); return JSON.parse(JSON.stringify(INITIAL)); } }
+// save/load helpers
+function save(obj){ localStorage.setItem(LS_KEY, JSON.stringify(obj)); }
+function load(){ const raw = localStorage.getItem(LS_KEY); if(!raw){ localStorage.setItem(LS_KEY, JSON.stringify(INITIAL)); return JSON.parse(JSON.stringify(INITIAL)); } try{ return JSON.parse(raw);}catch(e){ localStorage.removeItem(LS_KEY); localStorage.setItem(LS_KEY, JSON.stringify(INITIAL)); return JSON.parse(JSON.stringify(INITIAL)); } }
 </script>
 </body>
 </html>
