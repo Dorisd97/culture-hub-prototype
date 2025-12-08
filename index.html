@@ -3,10 +3,10 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>RootsShare Prototype</title>
+<title>RootsShare Prototype — Sidebar Nav</title>
 <style>
   :root{
-    --bg:#0b1220; --card:#0f1b26; --muted:#9fb0bb; --accent:#7ad7b0; --accent2:#6fb5ff;
+    --bg:#07101a; --card:#0f1b26; --muted:#9fb0bb; --accent:#7ad7b0; --accent2:#6fb5ff;
     --glass: rgba(255,255,255,0.03);
     font-family: Inter, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
     color-scheme: dark;
@@ -18,7 +18,7 @@
   .logo{width:56px;height:56px;border-radius:12px;background:linear-gradient(135deg,var(--accent),var(--accent2));display:flex;align-items:center;justify-content:center;color:#042;font-weight:800;font-size:18px}
   h1{margin:0;font-size:20px}
   .lead{margin:0;color:var(--muted);font-size:13px}
-  .layout{display:grid;grid-template-columns:260px 1fr 300px;gap:18px;margin-top:14px}
+  .layout{display:grid;grid-template-columns:220px 1fr 300px;gap:18px;margin-top:14px}
   .card{background:var(--card);border-radius:12px;padding:14px;box-shadow:0 6px 30px rgba(0,0,0,0.6);}
   .sidebar .section{margin-bottom:12px}
   .btn{background:var(--accent);color:#032; padding:9px 12px;border-radius:10px;border:none;font-weight:700;cursor:pointer}
@@ -46,9 +46,9 @@
   .rating{display:inline-flex;gap:4px;align-items:center}
   .star{cursor:pointer;font-size:18px;color:var(--muted)}
   .star.on{color:#ffd66b}
-  nav.tabs{display:flex;gap:8px;margin-bottom:10px}
-  nav.tabs button{background:transparent;border:1px solid rgba(255,255,255,0.04);padding:8px 10px;border-radius:8px;color:var(--muted);cursor:pointer}
-  nav.tabs button.active{background:#e6f0f225;color:#052;font-weight:700}
+  nav.side-menu{display:flex;flex-direction:column;gap:8px;margin-bottom:12px}
+  nav.side-menu button{background:transparent;border:none;text-align:left;padding:10px;border-radius:8px;color:var(--muted);cursor:pointer;font-size:15px}
+  nav.side-menu button.active{background:rgba(255,255,255,0.03);color:#e6f0f6;font-weight:800}
   .profile-blog .post-item{padding:10px;border-radius:8px;background:rgba(255,255,255,0.01);margin-bottom:8px}
   .search-inline{display:flex;gap:8px}
   @media (max-width:1000px){ .layout{grid-template-columns:1fr; } .right{order:2} .sidebar{order:3} }
@@ -60,7 +60,7 @@
     <div class="logo">RS</div>
     <div>
       <h1>RootsShare — Prototype</h1>
-      <p class="lead">Share cultural memories, rate helpful posts, explore country hubs, and find people by interests.</p>
+      <p class="lead">Use the left menu to switch between Country hub, Public Feed, and Find People.</p>
     </div>
     <div style="margin-left:auto">
       <button class="btn" id="newPostBtn">+ New Post</button>
@@ -68,21 +68,27 @@
   </header>
 
   <div class="layout">
-    <!-- LEFT: Sidebar (Country hub + discovery) -->
+    <!-- LEFT: Sidebar (Navigation + Country list + discovery filters) -->
     <aside class="sidebar card">
+      <nav class="side-menu" id="sideMenu">
+        <button class="active" data-view="feed">• Public Feed</button>
+        <button data-view="countries">• Country Hub</button>
+        <button data-view="people">• Find People</button>
+      </nav>
+
       <div class="section">
-        <strong>Country Hub</strong>
-        <p class="small">Browse the cultural library by country</p>
+        <strong>Country list</strong>
+        <p class="small">Click a country to open its hub</p>
         <div style="margin-top:8px">
-          <input id="countrySearch" class="input" placeholder="Search country (e.g., China)" />
+          <input id="countrySearch" class="input" placeholder="Filter countries (e.g., China)" />
         </div>
-        <div style="margin-top:8px;max-height:220px;overflow:auto" id="countryList"></div>
+        <div style="margin-top:8px;max-height:280px;overflow:auto" id="countryList"></div>
       </div>
 
       <hr style="border:none;height:12px">
 
       <div class="section">
-        <strong>People discovery</strong>
+        <strong>Quick People Filters</strong>
         <div style="margin-top:8px" class="search-inline">
           <input id="personCountry" class="input" placeholder="Country"/>
           <input id="personInterest" class="input" placeholder="Interest (e.g., recipes)"/>
@@ -91,7 +97,6 @@
           <button class="btn" id="findPeopleBtn">Find</button>
           <button class="btn ghost" id="clearPeople">Clear</button>
         </div>
-        <div style="margin-top:10px" id="peopleResults" class="people-list small"></div>
       </div>
 
       <hr style="border:none;height:12px">
@@ -99,22 +104,16 @@
       <div>
         <strong>Quick Actions</strong>
         <div style="margin-top:8px;display:flex;gap:8px;flex-wrap:wrap">
-          <button class="btn ghost" id="gotoFeed">Feed</button>
+          <button class="btn ghost" id="gotoFeed">Go to Feed</button>
           <button class="btn ghost" id="gotoProfile">My Profile</button>
           <button class="btn ghost" id="resetData">Reset</button>
         </div>
       </div>
     </aside>
 
-    <!-- MIDDLE: Main feed / country / post detail area -->
+    <!-- MIDDLE: Main feed / country / people area -->
     <main>
       <div class="card" id="mainCard">
-        <nav class="tabs" id="mainTabs">
-          <button class="active" data-view="feed">Public Feed</button>
-          <button data-view="countries">Countries</button>
-          <button data-view="explore">Explore (Find People)</button>
-        </nav>
-
         <div id="viewArea">
           <!-- Feed view -->
           <div id="feedView">
@@ -122,7 +121,7 @@
               <div>
                 <input id="feedSearch" class="input" placeholder="Search posts, country, author..." style="width:420px"/>
               </div>
-              <div class="small">Default ratings: 5-star & upvote answers</div>
+              <div class="small">Rating: 5-star & upvote answers</div>
             </div>
             <div id="feed" class="feed"></div>
           </div>
@@ -131,21 +130,19 @@
           <div id="countriesView" style="display:none">
             <div style="display:flex;justify-content:space-between;align-items:center">
               <strong>Countries — browse cultural subsections</strong>
-              <div class="small muted">Choose a country to open its hub</div>
+              <div class="small muted">Select a country from the left</div>
             </div>
-            <div class="country-hub" id="countryHubArea" style="margin-top:12px"></div>
+            <div id="countryHubArea" style="margin-top:12px"></div>
           </div>
 
-          <!-- Explore view -->
-          <div id="exploreView" style="display:none">
-            <strong>Explore people</strong>
-            <div class="small" style="margin-bottom:8px">Use sidebar filters or search below</div>
+          <!-- People view -->
+          <div id="peopleView" style="display:none">
+            <strong>Find People</strong>
+            <div class="small" style="margin-bottom:8px">Use the filters on the left or search below</div>
             <div style="margin-top:8px" id="exploreResults" class="people-list"></div>
           </div>
         </div>
       </div>
-
-      <!-- Post Detail / Country Detail modal will open above as modal -->
     </main>
 
     <!-- RIGHT: Profile (blog-style) & quick list -->
@@ -180,30 +177,17 @@
     </aside>
   </div>
 
-  <footer style="text-align:center;color:var(--muted);margin-top:18px">Prototype for a design-thinking class — data stored locally in your browser.</footer>
+  <footer style="text-align:center;color:var(--muted);margin-top:18px">Prototype — data stored locally in your browser.</footer>
 </div>
 
 <!-- Modal -->
 <div class="modal-back" id="modalBack"><div class="modal" id="modal"></div></div>
 
 <script>
-/*
-  RootsShare prototype JS (single-file)
-  - Uses localStorage key 'roots_v2'
-  - Entities:
-    - user: {name, country, languages, bio, interests}
-    - posts: {id, title, category, country, text, authorName, createdAt, visibility, ratingAvg, ratingCount, ratings:[], answers:[], favorites:[] }
-    - people discovered via user pool (derived from posts/authors)
-  Features implemented:
-    - Mandatory category on post creation
-    - 5-star rating per post (one rating per browser session per post)
-    - Upvote answers, comment/answer posts
-    - Country pages with subsections (Story/Recipe/etc) listing posts from that country/category
-    - Profile page acts as blog (lists user's posts & answers)
-    - Find people by country/interest/topic
+/* Modified RootsShare prototype: left sidebar navigation controls which main view is visible.
+   Full features: mandatory category, 5-star rating, country hubs, profile blog, people discovery.
 */
-
-const LS_KEY = 'roots_v2';
+const LS_KEY = 'roots_v3';
 const DEFAULT_USER = { name:'Freya Lindholm', country:'Sweden', languages:'Swedish, English', bio:'Master’s student studying cultures', interests:'music,recipes' };
 const INITIAL = {
   user: DEFAULT_USER,
@@ -222,8 +206,6 @@ function load(){
 }
 function save(data){ localStorage.setItem(LS_KEY, JSON.stringify(data)); }
 let state = load();
-
-// simple uid
 function uid(pref='id'){ return pref + Math.random().toString(36).slice(2,9); }
 
 // DOM refs
@@ -246,30 +228,27 @@ const favoritesList = document.getElementById('favoritesList');
 const newPostFromProfile = document.getElementById('myNewPost');
 const editProfileBtn = document.getElementById('editProfile');
 const countrySearch = document.getElementById('countrySearch');
-const mainTabs = document.getElementById('mainTabs');
-const viewArea = document.getElementById('viewArea');
+const sideMenu = document.getElementById('sideMenu');
 const feedView = document.getElementById('feedView');
 const countriesView = document.getElementById('countriesView');
-const exploreView = document.getElementById('exploreView');
+const peopleView = document.getElementById('peopleView');
 const exploreResults = document.getElementById('exploreResults');
+
+// render helpers
+function escape(s){ return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;'); }
+function shorten(s,n){ return s.length>n? s.slice(0,n-1)+'…': s; }
 
 function renderProfile(){
   const u = state.user;
   profileName.textContent = u.name;
   profileMeta.textContent = `From ${u.country} · ${u.languages}`;
   avatar.textContent = (u.name.split(' ').map(s=>s[0]).slice(0,2).join('')).toUpperCase();
-  // blog entries
   const myPosts = state.posts.filter(p=>p.authorName===u.name).sort((a,b)=>b.createdAt.localeCompare(a.createdAt));
-  profileBlog.innerHTML = myPosts.length? myPosts.map(p=>`<div class="post-item"><strong>${escape(p.title)}</strong><div class="small muted">${p.category} · ${p.country} · ${p.createdAt}</div><div style="margin-top:6px">${escape(shorten(p.text,180))}</div>
-    <div style="margin-top:6px"><button class="btn ghost view-post" data-id="${p.id}">Open</button></div></div>`).join(''): '<div class="small muted">No posts yet — create one!</div>';
+  profileBlog.innerHTML = myPosts.length? myPosts.map(p=>`<div class="post-item"><strong>${escape(p.title)}</strong><div class="small muted">${p.category} · ${p.country} · ${p.createdAt}</div><div style="margin-top:6px">${escape(shorten(p.text,180))}</div><div style="margin-top:6px"><button class="btn ghost view-post" data-id="${p.id}">Open</button></div></div>`).join(''):'<div class="small muted">No posts yet — create one!</div>';
   profileBlog.querySelectorAll('.view-post').forEach(b=>b.addEventListener('click',e=>openPost(e.currentTarget.dataset.id)));
-  // favorites (posts with favorites array containing user name)
   const favs = state.posts.filter(p=> (p.favorites || []).includes(u.name) );
   favoritesList.innerHTML = favs.length? favs.map(f=>`<div style="margin-bottom:8px"><strong>${escape(f.title)}</strong><div class="small muted">${f.country} · ${f.category}</div></div>`).join('') : '<div class="small muted">No favorites yet.</div>';
 }
-
-function escape(s){ return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;'); }
-function shorten(s,n){ return s.length>n? s.slice(0,n-1)+'…': s; }
 
 function renderFeed(){
   feedEl.innerHTML = '';
@@ -301,7 +280,6 @@ function renderFeed(){
     `;
     feedEl.appendChild(div);
   });
-  // attach events
   feedEl.querySelectorAll('.view-post').forEach(b=>b.addEventListener('click',e=>openPost(e.currentTarget.dataset.id)));
   feedEl.querySelectorAll('.fav-btn').forEach(b=>b.addEventListener('click',handleFavorite));
   feedEl.querySelectorAll('.rating .star').forEach(s=>s.addEventListener('click',handleRating));
@@ -321,22 +299,19 @@ function handleFavorite(e){
   const p = state.posts.find(x=>x.id===id);
   if(!p.favorites) p.favorites = [];
   const name = state.user.name;
-  if(p.favorites.includes(name)){ // remove
-    p.favorites = p.favorites.filter(n=>n!==name);
-  } else { p.favorites.push(name); }
+  if(p.favorites.includes(name)){ p.favorites = p.favorites.filter(n=>n!==name); } else { p.favorites.push(name); }
   save(state); renderProfile(); renderFeed();
 }
 
 function handleRating(e){
   const postId = e.currentTarget.parentElement.dataset.id;
   const star = Number(e.currentTarget.dataset.star);
-  // to keep simple: allow rating multiple times; store in p.ratings array
   const p = state.posts.find(x=>x.id===postId);
   if(!p.ratings) p.ratings = [];
   p.ratings.push(star);
   p.ratingCount = p.ratings.length;
   p.ratingAvg = Math.round((p.ratings.reduce((a,b)=>a+b,0)/p.ratingCount)*10)/10;
-  save(state); renderFeed(); // re-render to show updated stars
+  save(state); renderFeed();
 }
 
 // New post modal
@@ -391,13 +366,11 @@ function openPost(id){
       <div style="display:flex;gap:8px;justify-content:flex-end"><button type="submit" class="btn">Add Answer</button></div>
     </form>
   `);
-  // attach upvote handlers
   modal.querySelectorAll('.upvote').forEach(b=>b.addEventListener('click',e=>{
     const aid = e.currentTarget.dataset.id; const pid = e.currentTarget.dataset.post;
     const post = state.posts.find(x=>x.id===pid); const ans = post.answers.find(x=>x.id===aid); ans.upvotes = (ans.upvotes||0)+1;
     save(state); openPost(pid);
   }));
-  // rating stars in modal
   modal.querySelectorAll('.rating .star').forEach(s=>s.addEventListener('click',e=>{
     const star = Number(e.currentTarget.dataset.star);
     const pid = e.currentTarget.parentElement.dataset.id;
@@ -407,7 +380,6 @@ function openPost(id){
     post.ratingAvg = Math.round((post.ratings.reduce((a,b)=>a+b,0)/post.ratingCount)*10)/10;
     save(state); openPost(pid);
   }));
-  // answer form
   document.getElementById('answerForm').addEventListener('submit',function(ev){
     ev.preventDefault();
     const author = document.getElementById('answerAuthor').value.trim() || 'Anonymous';
@@ -419,14 +391,12 @@ function openPost(id){
   });
 }
 
-// Country hub and subsections
+// Countries list & hub
 function uniqueCountries(){ return Array.from(new Set(state.posts.map(p=>p.country))).sort(); }
 function renderCountries(){
-  // left list
   const countries = uniqueCountries();
   countryList.innerHTML = countries.map(c=>`<div style="padding:8px;border-radius:8px;background:rgba(255,255,255,0.01);margin-bottom:6px;display:flex;justify-content:space-between;align-items:center"><div>${escape(c)}</div><div><button class="btn ghost open-country" data-country="${escape(c)}">Open</button></div></div>`).join('');
   countryList.querySelectorAll('.open-country').forEach(b=>b.addEventListener('click',e=>openCountry(e.currentTarget.dataset.country)));
-  // hub area: show top countries with small preview
   countryHubArea.innerHTML = countries.map(c=>{
     const byC = state.posts.filter(p=>p.country===c);
     return `<div style="padding:10px;border-radius:8px;background:rgba(255,255,255,0.01)"><div style="display:flex;justify-content:space-between;align-items:center"><strong>${escape(c)}</strong><div><button class="btn ghost open-country" data-country="${escape(c)}">Open hub</button></div></div><div class="small muted" style="margin-top:8px">${byC.length} posts · top: ${byC.slice(0,3).map(p=>escape(p.title)).join(' · ')}</div></div>`;
@@ -434,9 +404,7 @@ function renderCountries(){
   countryHubArea.querySelectorAll('.open-country').forEach(b=>b.addEventListener('click',e=>openCountry(e.currentTarget.dataset.country)));
 }
 
-// Open a country hub modal with subsections
 function openCountry(country){
-  const subs = ['Story','Recipe','Ritual','Word','Song','Question','Other'];
   const postsBy = state.posts.filter(p=>p.country===country && p.visibility==='public');
   let active = 'Story';
   showModal(renderCountryHtml(country, postsBy, active));
@@ -453,7 +421,6 @@ function openCountry(country){
   bindSubs();
 }
 
-// returns HTML for initial country modal
 function renderCountryHtml(country, postsBy, active){
   const subs = ['Story','Recipe','Ritual','Word','Song','Question','Other'];
   const tabs = subs.map(s=>`<div class="subtab ${s===active?'active':''}" data-sub="${s}">${s}</div>`).join('');
@@ -471,7 +438,6 @@ function renderCountryHtml(country, postsBy, active){
 
 // People discovery
 function findPeople(countryFilter, interestFilter){
-  // derive people from posts (authors) and include profile user
   const authors = Array.from(new Set(state.posts.map(p=>p.authorName)));
   const people = authors.map(name=>{
     const posts = state.posts.filter(p=>p.authorName===name);
@@ -491,7 +457,6 @@ function renderPeopleResults(list, container){
 }
 
 function openPerson(name){
-  // open modal showing person's mini-profile (posts & contact)
   const posts = state.posts.filter(p=>p.authorName===name);
   const countries = Array.from(new Set(posts.map(p=>p.country))).join(', ');
   const interests = Array.from(new Set(posts.map(p=>p.category))).join(', ');
@@ -508,48 +473,13 @@ function showModal(html){
   modalBack.style.display='flex';
   modalBack.addEventListener('click',onBack);
   modal.querySelectorAll('.close').forEach(b=>b.addEventListener('click',closeModal));
-  // special new post in country
   const newInCountry = modal.querySelector('#newPostInCountry');
   if(newInCountry) newInCountry.addEventListener('click', ()=>{ const country = newInCountry.textContent.split(' in ')[1]; openNewPost(country); });
 }
 function onBack(e){ if(e.target===modalBack) closeModal(); }
 function closeModal(){ modalBack.style.display='none'; modal.innerHTML=''; modalBack.removeEventListener('click',onBack); }
 
-// Bind UI
-function bind(){
-  newPostBtn.addEventListener('click',()=>openNewPost());
-  document.addEventListener('click', function(e){
-    if(e.target && e.target.classList.contains('view-post')) openPost(e.target.dataset.id);
-    if(e.target && e.target.classList.contains('close')) closeModal();
-  });
-  document.getElementById('resetData').addEventListener('click',()=>{ if(confirm('Reset prototype data?')){ localStorage.removeItem(LS_KEY); state = load(); renderAll(); }});
-  document.getElementById('myNewPost').addEventListener('click',()=>openNewPost());
-  editProfileBtn.addEventListener('click', openProfileModal);
-  findPeopleBtn.addEventListener('click', ()=>{ const list = findPeople(personCountry.value, personInterest.value); renderPeopleResults(list, peopleResults); renderPeopleResults(list, exploreResults); });
-  document.getElementById('clearPeople').addEventListener('click', ()=>{ personCountry.value=''; personInterest.value=''; peopleResults.innerHTML=''; });
-  feedSearch.addEventListener('input', renderFeed);
-  countrySearch.addEventListener('input', ()=>{ const q = countrySearch.value.toLowerCase(); countryList.querySelectorAll('div').forEach(d=>{ d.style.display = q? (d.textContent.toLowerCase().includes(q)?'flex':'none') : 'flex'; }); });
-  // main tabs
-  mainTabs.querySelectorAll('button').forEach(b=>b.addEventListener('click', e=>{
-    mainTabs.querySelectorAll('button').forEach(x=>x.classList.remove('active'));
-    e.currentTarget.classList.add('active');
-    const view = e.currentTarget.dataset.view;
-    feedView.style.display = view==='feed' ? '' : 'none';
-    countriesView.style.display = view==='countries' ? '' : 'none';
-    exploreView.style.display = view==='explore' ? '' : 'none';
-  }));
-  // delegate star click for feed (since stars are rendered dynamically)
-  document.addEventListener('click', function(e){
-    if(e.target && e.target.classList.contains('star') && e.target.parentElement.classList.contains('rating')){
-      handleRating({ currentTarget: e.target });
-    }
-    if(e.target && e.target.classList.contains('view-post')){
-      openPost(e.target.dataset.id);
-    }
-  });
-}
-
-// simple profile editor
+// Profile editor
 function openProfileModal(){
   showModal(`
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px"><strong>Edit Profile</strong><button class="close btn ghost">Close</button></div>
@@ -569,38 +499,75 @@ function openProfileModal(){
   });
 }
 
-// initial render functions
+// Bind UI & navigation
+function bind(){
+  newPostBtn.addEventListener('click',()=>openNewPost());
+  document.addEventListener('click', function(e){
+    if(e.target && e.target.classList.contains('view-post')) openPost(e.target.dataset.id);
+    if(e.target && e.target.classList.contains('close')) closeModal();
+  });
+  document.getElementById('resetData').addEventListener('click',()=>{ if(confirm('Reset prototype data?')){ localStorage.removeItem(LS_KEY); state = load(); renderAll(); }});
+  document.getElementById('myNewPost').addEventListener('click',()=>openNewPost());
+  editProfileBtn.addEventListener('click', openProfileModal);
+  findPeopleBtn.addEventListener('click', ()=>{ const list = findPeople(personCountry.value, personInterest.value); renderPeopleResults(list, peopleResults); renderPeopleResults(list, exploreResults); });
+  document.getElementById('clearPeople').addEventListener('click', ()=>{ personCountry.value=''; personInterest.value=''; peopleResults.innerHTML=''; exploreResults.innerHTML=''; });
+
+  // sidebar nav clicks: show only selected view
+  sideMenu.querySelectorAll('button').forEach(b=>b.addEventListener('click', e=>{
+    sideMenu.querySelectorAll('button').forEach(x=>x.classList.remove('active'));
+    e.currentTarget.classList.add('active');
+    const view = e.currentTarget.dataset.view;
+    feedView.style.display = view==='feed' ? '' : 'none';
+    countriesView.style.display = view==='countries' ? '' : 'none';
+    peopleView.style.display = view==='people' ? '' : 'none';
+  }));
+
+  feedSearch.addEventListener('input', renderFeed);
+  countrySearch.addEventListener('input', ()=>{ const q = countrySearch.value.toLowerCase(); countryList.querySelectorAll('div').forEach(d=>{ d.style.display = q? (d.textContent.toLowerCase().includes(q)?'flex':'none') : 'flex'; }); });
+}
+
+// initial renders
 function renderAll(){
   renderProfile(); renderFeed(); renderCountries(); renderPeopleResults(findPeople('', ''), peopleResults); renderPeopleResults(findPeople('', ''), exploreResults);
 }
-bind(); renderAll(); // initial
+bind(); renderAll();
 
-// expose some functions to modal delegated handlers
+// expose functions used by dynamic handlers
 function handleRating(e){
-  // e.currentTarget is star element
   const star = Number(e.currentTarget.dataset.star);
   const postId = e.currentTarget.parentElement.dataset.id;
-  // find post & push rating
   const p = state.posts.find(x=>x.id===postId);
   if(!p.ratings) p.ratings = [];
   p.ratings.push(star);
   p.ratingCount = p.ratings.length; p.ratingAvg = Math.round((p.ratings.reduce((a,b)=>a+b,0)/p.ratingCount)*10)/10;
   save(state); renderFeed();
 }
-
-function onModalClickSelectors(){
-  // when modal opens, attach star click handlers and view-posts
-  modal.querySelectorAll('.rating .star').forEach(s=>s.addEventListener('click', (ev)=>{ handleRating({ currentTarget: s }); }));
-  modal.querySelectorAll('.view-post').forEach(b=>b.addEventListener('click', e=>openPost(e.currentTarget.dataset.id)));
+function handleFavorite(e){
+  const id = e.currentTarget.dataset.id;
+  const p = state.posts.find(x=>x.id===id);
+  if(!p.favorites) p.favorites = [];
+  const name = state.user.name;
+  if(p.favorites.includes(name)){ p.favorites = p.favorites.filter(n=>n!==name); } else { p.favorites.push(name); }
+  save(state); renderProfile(); renderFeed();
 }
-modalBack.addEventListener('DOMNodeInserted', onModalClickSelectors);
 
-// small helper: open country via left list click
+// convenience: open feed or countries programmatically (used by quick buttons)
+document.getElementById('gotoFeed').addEventListener('click', ()=>{ sideMenu.querySelector('button[data-view="feed"]').click(); });
+document.getElementById('gotoProfile').addEventListener('click', ()=>{ sideMenu.querySelector('button[data-view="people"]').click(); });
+
+// helper: delegate star clicks inside feed (since stars are dynamic)
 document.addEventListener('click', function(e){
-  if(e.target && e.target.classList.contains('open-country')) openCountry(e.target.dataset.country);
+  if(e.target && e.target.classList.contains('star') && e.target.parentElement.classList.contains('rating')){
+    handleRating({ currentTarget: e.target });
+  }
+  if(e.target && e.target.classList.contains('view-post')){
+    openPost(e.target.dataset.id);
+  }
 });
 
-// end of script
+// save helper
+function save(stateObj){ localStorage.setItem(LS_KEY, JSON.stringify(stateObj)); }
+function load(){ const raw = localStorage.getItem(LS_KEY); if(!raw){ localStorage.setItem(LS_KEY, JSON.stringify(INITIAL)); return JSON.parse(JSON.stringify(INITIAL)); } try { return JSON.parse(raw); } catch(e){ localStorage.removeItem(LS_KEY); localStorage.setItem(LS_KEY, JSON.stringify(INITIAL)); return JSON.parse(JSON.stringify(INITIAL)); } }
 </script>
 </body>
 </html>
