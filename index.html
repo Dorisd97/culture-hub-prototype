@@ -442,7 +442,14 @@ nav.side-menu button.active{
 
       <!-- FEED VIEW -->
       <div id="feedView">
-        <input id="feedSearch" class="input" placeholder="Search posts...">
+        <div style="display:flex;gap:12px;align-items:center;">
+  <input id="feedSearch" class="input" placeholder="Search posts...">
+
+  <select id="feedSort" class="input" style="max-width:180px;">
+    <option value="newest">Newest</option>
+    <option value="rating">Highest Rated</option>
+  </select>
+</div>
         <div id="feed" class="feed-grid" style="margin-top:14px;"></div>
       </div>
 
@@ -602,12 +609,24 @@ function renderNavProfile(){
 ------------------------------------------------------*/
 function renderFeed(){
   const q = feedSearch.value.toLowerCase();
-  const posts = state.posts.filter(p =>
-    p.visibility==="public" &&
-    (p.title + p.text + p.country + p.authorName).toLowerCase().includes(q)
-  ).sort((a,b)=>b.createdAt.localeCompare(a.createdAt));
+  const sortBy = feedSort.value;
 
-  if(posts.length===0){
+  let posts = state.posts.filter(p =>
+    p.visibility==="public" &&
+    (p.title + p.text + p.country + p.authorName)
+      .toLowerCase()
+      .includes(q)
+  );
+
+  if(sortBy === "newest"){
+    posts.sort((a,b)=>b.createdAt.localeCompare(a.createdAt));
+  }
+
+  if(sortBy === "rating"){
+    posts.sort((a,b)=>computeRatingAvg(b) - computeRatingAvg(a));
+  }
+
+  if(posts.length === 0){
     feed.innerHTML = `<div class="empty">No posts found.</div>`;
     return;
   }
@@ -1033,6 +1052,7 @@ newPostBtn.onclick = ()=>openNewPost();
 gotoProfile.onclick = ()=>openProfileModal();
 gotoFeed.onclick = ()=>sideMenu.querySelector('[data-view="feed"]').click();
 feedSearch.oninput = ()=>renderFeed();
+feedSort.onchange = renderFeed;
 
 findPeopleBtnTab.onclick = ()=>{
   renderPeople(findPeople(personCountryTab.value, personInterestTab.value));
