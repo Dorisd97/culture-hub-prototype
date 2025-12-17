@@ -294,6 +294,15 @@ nav.side-menu button.active{
   width:100%;
 }
 
+.post-card{
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.post-card:hover{
+  transform: translateY(-4px);
+  box-shadow: 0 12px 32px rgba(0,0,0,0.6);
+}
+
 /* MOBILE */
 @media(max-width:900px){
   .wrapper{grid-template-columns:1fr;}
@@ -763,12 +772,28 @@ function openPost(id){
 
   showModal(`
     <div style="display:flex;justify-content:space-between;">
-      <h3>${esc(p.title)}</h3>
+      <h3 style="font-size:22px;font-weight:800;margin-bottom:6px;">
+        ${esc(p.title)}
+      </h3>
+
       <button class="btn ghost" onclick="closeModal()">Close</button>
     </div>
 
-    <div class="post-meta">${esc(p.authorName)} · ${esc(p.country)}</div>
-    <p style="margin-top:12px;">${esc(p.text)}</p>
+    <div class="post-meta" style="margin-bottom:14px;">
+     ${esc(p.authorName)} · ${esc(p.country)}
+    </div>
+
+    <div style="
+  background:rgba(255,255,255,0.05);
+  padding:14px;
+  border-radius:10px;
+  margin-top:12px;
+  font-size:15px;
+  line-height:1.6;
+">
+  ${esc(p.text)}
+</div>
+
 
     <h4 style="margin-top:20px;">Rating</h4>
     <div class="rating">${renderStars(computeRatingAvg(p), p.id)}</div>
@@ -777,11 +802,21 @@ function openPost(id){
     <div id="commentList">
       ${
         p.comments.map(c=>`
-          <div class="card" style="margin-top:10px;">
-            <strong>${esc(c.author)}</strong>
+          <div style="
+  background:rgba(255,255,255,0.04);
+  padding:14px;
+  border-radius:12px;
+  margin-top:12px;
+">
+            <strong style="font-size:15px;">${esc(c.author)}</strong>
             <div class="post-meta">${c.createdAt}</div>
             <p style="margin-top:6px;">${esc(c.text)}</p>
-            <button class="btn ghost" onclick="upvoteComment('${p.id}','${c.id}')">▲ ${c.upvotes}</button>
+            <button class="btn ghost"
+        style="margin-top:8px;font-size:14px;"
+        onclick="upvoteComment('${p.id}','${c.id}')">
+  ▲ ${c.upvotes}
+</button>
+
           </div>
         `).join("")
       }
@@ -790,7 +825,10 @@ function openPost(id){
     <form id="commentForm" style="margin-top:18px;display:flex;flex-direction:column;gap:12px;">
       <input id="commentAuthor" class="input" placeholder="Your name" value="${esc(state.user.name)}">
       <textarea id="commentText" class="input" placeholder="Write a comment..."></textarea>
-      <button class="btn">Add Comment</button>
+      <button class="btn" style="margin-top:8px;">
+  Add Comment
+</button>
+
     </form>
   `);
 
