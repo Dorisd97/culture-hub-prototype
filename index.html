@@ -146,12 +146,19 @@ nav.side-menu button.active{
   display:flex;
   align-items:center;
   justify-content:space-between;
-  margin-bottom:14px;
+  min-height:64px;
+  margin-bottom:18px;
 }
 
 .topnav h2{
   font-size:26px;
   font-weight:700;
+}
+
+.topnav .btn{
+  height:40px;
+  display:flex;
+  align-items:center;
 }
 
 .topnav-right{
@@ -163,9 +170,9 @@ nav.side-menu button.active{
 .profile-mini{
   display:flex;
   align-items:center;
-  gap:12px;
+  gap:10px;
   background:var(--surface);
-  padding:10px 14px;
+  padding:8px 12px;
   border-radius:var(--radius-sm);
   cursor:pointer;
 }
@@ -387,7 +394,14 @@ nav.side-menu button.active{
   <main>
 
     <div class="topnav">
-        <h2>Discover stories</h2>
+        <h2 style="
+  margin:0;
+  font-size:22px;
+  font-weight:700;
+  line-height:1;
+">
+  Discover stories
+</h2>
 
 
       <div class="topnav-right">
