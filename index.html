@@ -129,6 +129,16 @@ nav.side-menu button.active{
   object-fit:contain;
   border-radius:18px;
 }
+.quick-actions{
+  display:flex;
+  flex-direction:column;
+  gap:14px; /* increases spacing safely */
+}
+
+#resetData:hover{
+  background:rgba(255,0,0,0.15);
+  color:#ffb3b3;
+}
 /* -------------------------------------------------------
    TOP NAV
 --------------------------------------------------------*/
@@ -344,12 +354,22 @@ nav.side-menu button.active{
       <button data-view="people">👥 Find People</button>
     </nav>
 
-    <div>
-  <div class="side-title">Quick Actions</div>
-  <button class="btn ghost" id="gotoFeed">Go to Feed</button>
-  <button class="btn ghost" id="gotoProfile">Edit Profile</button>
-  <button class="btn ghost" id="resetData">Reset</button>
-</div>
+    <div class="quick-actions">
+     <div class="side-title">Quick Actions</div>
+
+     <button class="btn ghost" id="gotoFeed">Go to Feed</button>
+     <button class="btn ghost" id="gotoProfile">Edit Profile</button>
+   </div>
+
+
+     <!-- Danger zone -->
+   <div style="margin-top:auto;">
+     <button class="btn ghost"
+          id="resetData"
+          style="width:100%;opacity:0.7;">
+    Reset
+     </button>
+   </div>
   </aside>
 
   <!-- MAIN -->
@@ -960,5 +980,15 @@ function renderAll(){
 renderAll();
 
 </script>
+
+<footer style="
+  text-align:center;
+  color:var(--text-muted);
+  font-size:13px;
+  margin:24px 0 10px;
+">
+  Designed by <strong>MiHermes</strong>
+</footer>
+
 </body>
 </html>
