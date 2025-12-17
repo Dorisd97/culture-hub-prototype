@@ -314,6 +314,27 @@ nav.side-menu button.active{
   box-shadow: 0 12px 32px rgba(0,0,0,0.6);
 }
 
+/* ----- Custom select dropdown styling ----- */
+select.input{
+  background-color: rgba(255,255,255,0.05);
+  color: var(--text);
+  font-family: inherit;
+  appearance: none;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+}
+
+/* Dropdown options */
+select.input option{
+  background-color: #0d1823; /* same as surface */
+  color: #e9f7f6;
+  font-family: inherit;
+}
+select.input:focus{
+  outline: none;
+  border-color: var(--accent);
+}
+
 /* MOBILE */
 @media(max-width:900px){
   .wrapper{grid-template-columns:1fr;}
