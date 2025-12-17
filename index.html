@@ -292,6 +292,8 @@ nav.side-menu button.active{
   padding:20px;
   max-width:700px;
   width:100%;
+  max-height:85vh;
+  overflow-y:auto;
 }
 
 .post-card{
@@ -808,11 +810,20 @@ function openPost(id){
   border-radius:12px;
   margin-top:12px;
 ">
-            <strong style="font-size:15px;">${esc(c.author)}</strong>
-            <div class="post-meta">${c.createdAt}</div>
-            <p style="margin-top:6px;">${esc(c.text)}</p>
+            <div style="display:flex;justify-content:space-between;align-items:center;">
+  <span style="font-size:13px;font-weight:600;">
+    ${esc(c.author)}
+  </span>
+  <span class="post-meta" style="font-size:12px;">
+    ${c.createdAt}
+  </span>
+</div>
+
+            <p style="margin-top:8px;font-size:14px;line-height:1.5;">
+  ${esc(c.text)}
+</p>
             <button class="btn ghost"
-        style="margin-top:8px;font-size:14px;"
+        style="margin-top:8px;font-size:13px;padding:6px 10px;"
         onclick="upvoteComment('${p.id}','${c.id}')">
   ▲ ${c.upvotes}
 </button>
@@ -823,7 +834,9 @@ function openPost(id){
     </div>
 
     <form id="commentForm" style="margin-top:18px;display:flex;flex-direction:column;gap:12px;">
-      <input id="commentAuthor" class="input" placeholder="Your name" value="${esc(state.user.name)}">
+      <div style="font-size:14px;color:var(--text-muted);">
+  Commenting as <strong>${esc(state.user.name)}</strong>
+</div>
       <textarea id="commentText" class="input" placeholder="Write a comment..."></textarea>
       <button class="btn" style="margin-top:8px;">
   Add Comment
@@ -839,7 +852,7 @@ function openPost(id){
 
     p.comments.push({
       id:"c"+Math.random().toString(36).slice(2),
-      author:commentAuthor.value,
+      author:state.user.name,
       text:txt,
       createdAt:new Date().toISOString().slice(0,10),
       upvotes:0
@@ -960,13 +973,20 @@ function openProfileModal(){
 ------------------------------------------------------*/
 function showModal(html){
   modal.innerHTML = html;
-  modalBack.style.display="flex";
-}
-function closeModal(){
-  modalBack.style.display="none";
-  modal.innerHTML="";
+  modalBack.style.display = "flex";
+
+  modalBack.onclick = (e) => {
+    if(e.target === modalBack){
+      closeModal();
+    }
+  };
 }
 
+function closeModal(){
+  modalBack.style.display = "none";
+  modal.innerHTML = "";
+  modalBack.onclick = null;
+}
 
 /* -----------------------------------------------------
    BINDINGS
